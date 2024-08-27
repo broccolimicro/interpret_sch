@@ -1,5 +1,5 @@
 NAME          = interpret_sch
-DEPEND        = sch parse_spice
+DEPEND        = sch phy parse_spice parse common
 
 SRCDIR        = $(NAME)
 TESTDIR       = tests
