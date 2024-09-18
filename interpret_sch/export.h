@@ -2,10 +2,14 @@
 
 #include <parse_spice/netlist.h>
 #include <sch/Netlist.h>
+#include <ucs/variable.h>
 
-#include <set>
+namespace sch {
 
-using namespace sch;
-using namespace std;
+string export_name(string name);
+string export_name(const Tech &tech, const Subckt &ckt, int net);
+parse_spice::device export_device(const Tech &tech, const Subckt &ckt, const Mos &mos, int index);
+parse_spice::subckt export_subckt(const Tech &tech, const Subckt &ckt, int index);
+parse_spice::netlist export_netlist(const Tech &tech, const Netlist &lib);
 
-
+}
