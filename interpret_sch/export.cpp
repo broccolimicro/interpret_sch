@@ -5,23 +5,24 @@ namespace sch {
 
 string export_name(string name) {
 	// Do name mangling
-	static map<char, string> replace = {
-		{'_', "__"},
-		{'.', "_0"},
-		{'[', "_1"},
-		{']', "_2"},
-		{'\'', "_3"},
-		{'(', "_4"},
-		{')', "_5"},
-		{'<', "_6"},
-		{'>', "_7"},
+	static map<char, char> replace = {
+		{'_', '_'},
+		{'.', '0'},
+		{'[', '1'},
+		{']', '2'},
+		{'\'', '3'},
+		{'(', '4'},
+		{')', '5'},
+		{'<', '6'},
+		{'>', '7'},
 	};
 
 	string result;
 	for (auto c = name.begin(); c != name.end(); c++) {
 		auto pos = replace.find(*c);
 		if (pos != replace.end()) {
-			result += pos->second;
+			result.push_back('_');
+			result.push_back(pos->second);
 		} else {
 			result.push_back(*c);
 		}
@@ -33,6 +34,19 @@ string export_name(const Tech &tech, const Subckt &ckt, int net) {
 	return export_name(ckt.nets[net].name);
 }
 
+parse_spice::device export_instance(const Tech &tech, const Netlist &lib, const Subckt &ckt, const Instance &inst, int index) {
+	parse_spice::device result;
+	result.valid = true;
+
+	result.name = "x" + to_string(index);
+	for (int i = 0; i < (int)inst.ports.size(); i++) {
+		result.ports.push_back(export_name(tech, ckt, inst.ports[i]));
+	}
+	result.type = lib.subckts[inst.subckt].name;
+
+	return result;
+}
+
 parse_spice::device export_device(const Tech &tech, const Subckt &ckt, const Mos &mos, int index) {
 	parse_spice::device result;
 	result.valid = true;
@@ -40,10 +54,10 @@ parse_spice::device export_device(const Tech &tech, const Subckt &ckt, const Mos
 	// TODO(edward.bingham) some technologies use raw transistor models "m" and some use subckts "x". For now, assume sky130 and use subckts
 	result.name = "x" + to_string(index);
 	// TODO(edward.bingham) some technologies have different port orderings. For now, just use drain gate source base
-	result.ports.push_back(export_name(tech, ckt, mos.ports[1]));
+	result.ports.push_back(export_name(tech, ckt, mos.drain));
 	result.ports.push_back(export_name(tech, ckt, mos.gate));
-	result.ports.push_back(export_name(tech, ckt, mos.ports[0]));
-	result.ports.push_back(export_name(tech, ckt, mos.bulk));
+	result.ports.push_back(export_name(tech, ckt, mos.source));
+	result.ports.push_back(export_name(tech, ckt, mos.base));
 	result.type = tech.models[mos.model].name;
 
 	result.params.push_back(parse_spice::parameter("w", to_minstring((double)mos.size[1]*tech.dbunit) + "u"));
@@ -52,13 +66,17 @@ parse_spice::device export_device(const Tech &tech, const Subckt &ckt, const Mos
 	return result;
 }
 
-parse_spice::subckt export_subckt(const Tech &tech, const Subckt &ckt, int index) {
+parse_spice::subckt export_subckt(const Tech &tech, const Netlist &lib, const Subckt &ckt, int index) {
 	parse_spice::subckt result;
 	result.valid = true;
 
 	result.name = ckt.name;
 	if (result.name.empty()) {
 		result.name = "process_" + to_string(index);
+	}
+
+	for (int i = 0; i < (int)ckt.inst.size(); i++) {
+		result.devices.push_back(export_instance(tech, lib, ckt, ckt.inst[i], i));
 	}
 
 	for (int i = 0; i < (int)ckt.mos.size(); i++) {
@@ -72,7 +90,7 @@ parse_spice::subckt export_subckt(const Tech &tech, const Subckt &ckt, int index
 	// _pReset, clk, _clk
 	for (int i = 0; i < (int)ckt.nets.size(); i++) {
 		if (ckt.nets[i].isIO) {
-			result.ports.push_back(ckt.nets[i].name);
+			result.ports.push_back(export_name(ckt.nets[i].name));
 		}
 	}
 
@@ -84,7 +102,7 @@ parse_spice::netlist export_netlist(const Tech &tech, const Netlist &lib) {
 	result.valid = true;
 
 	for (auto ckt = lib.subckts.begin(); ckt != lib.subckts.end(); ckt++) {
-		result.subckts.push_back(export_subckt(tech, *ckt, ckt-lib.subckts.begin()));
+		result.subckts.push_back(export_subckt(tech, lib, *ckt, ckt-lib.subckts.begin()));
 	}
 
 	return result;
