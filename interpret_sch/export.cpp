@@ -66,14 +66,11 @@ parse_spice::device export_device(const Tech &tech, const Subckt &ckt, const Mos
 	return result;
 }
 
-parse_spice::subckt export_subckt(const Tech &tech, const Netlist &lib, const Subckt &ckt, int index) {
+parse_spice::subckt export_subckt(const Tech &tech, const Netlist &lib, const Subckt &ckt) {
 	parse_spice::subckt result;
 	result.valid = true;
 
 	result.name = ckt.name;
-	if (result.name.empty()) {
-		result.name = "process_" + to_string(index);
-	}
 
 	for (int i = 0; i < (int)ckt.inst.size(); i++) {
 		result.devices.push_back(export_instance(tech, lib, ckt, ckt.inst[i], i));
@@ -101,8 +98,11 @@ parse_spice::netlist export_netlist(const Tech &tech, const Netlist &lib) {
 	parse_spice::netlist result;
 	result.valid = true;
 
-	for (auto ckt = lib.subckts.begin(); ckt != lib.subckts.end(); ckt++) {
-		result.subckts.push_back(export_subckt(tech, lib, *ckt, ckt-lib.subckts.begin()));
+	for (int i = 0; i < (int)lib.subckts.size(); i++) {
+		result.subckts.push_back(export_subckt(tech, lib, lib.subckts[i]));
+		if (result.subckts.back().name.empty()) {
+			result.subckts.back().name = "process_" + to_string(i);
+		}
 	}
 
 	return result;
