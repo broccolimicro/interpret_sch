@@ -123,7 +123,7 @@ Subckt import_subckt(const parse_spice::subckt &syntax, const Tech &tech, tokeni
 // load a spice AST into the layout engine
 void import_netlist(const parse_spice::netlist &syntax, Netlist &lib, tokenizer *tokens) {
 	for (int i = 0; i < (int)syntax.subckts.size(); i++) {
-		lib.subckts.push_back(import_subckt(syntax.subckts[i], lib.tech, tokens));
+		lib.subckts.push_back(import_subckt(syntax.subckts[i], *lib.tech, tokens));
 	}
 }
 
