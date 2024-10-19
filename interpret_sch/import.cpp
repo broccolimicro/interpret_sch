@@ -93,9 +93,9 @@ bool import_device(const parse_spice::device &syntax, Subckt &ckt, const Tech &t
 	for (auto param = syntax.params.begin(); param != syntax.params.end(); param++) {
 		vector<double> values(1, import_value(param->value, tokens));
 		if (param->name == "w") {
-			ckt.mos.back().size[1] = int(values[0]/tech.dbunit);
+			ckt.mos.back().size[1] = int(values[0]/(tech.dbunit*1e-6*tech.scale));
 		} else if (param->name == "l") {
-			ckt.mos.back().size[0] = int(values[0]/tech.dbunit);
+			ckt.mos.back().size[0] = int(values[0]/(tech.dbunit*1e-6*tech.scale));
 		} else {
 			ckt.mos.back().params.insert(pair<string, vector<double> >(param->name, values));
 		}

@@ -60,8 +60,8 @@ parse_spice::device export_device(const Tech &tech, const Subckt &ckt, const Mos
 	result.ports.push_back(export_name(ckt, mos.base));
 	result.type = tech.models[mos.model].name;
 
-	result.params.push_back(parse_spice::parameter("w", to_minstring((double)mos.size[1]*tech.dbunit) + "u"));
-	result.params.push_back(parse_spice::parameter("l", to_minstring((double)mos.size[0]*tech.dbunit) + "u"));
+	result.params.push_back(parse_spice::parameter("w", to_minstring((double)mos.size[1]*(tech.dbunit*tech.scale)) + "u"));
+	result.params.push_back(parse_spice::parameter("l", to_minstring((double)mos.size[0]*(tech.dbunit*tech.scale)) + "u"));
 
 	return result;
 }
