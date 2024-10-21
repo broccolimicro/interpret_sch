@@ -60,8 +60,28 @@ parse_spice::device export_device(const Tech &tech, const Subckt &ckt, const Mos
 	result.ports.push_back(export_name(ckt, mos.base));
 	result.type = tech.models[mos.model].name;
 
-	result.params.push_back(parse_spice::parameter("w", to_minstring((double)mos.size[1]*(tech.dbunit*tech.scale)) + "u"));
-	result.params.push_back(parse_spice::parameter("l", to_minstring((double)mos.size[0]*(tech.dbunit*tech.scale)) + "u"));
+	if (mos.size[1] > 0) {
+		result.params.push_back(parse_spice::parameter("w", to_minstring((double)mos.size[1]*(tech.dbunit*tech.scale)) + "u"));
+	}
+	if (mos.size[0] > 0) {
+		result.params.push_back(parse_spice::parameter("l", to_minstring((double)mos.size[0]*(tech.dbunit*tech.scale)) + "u"));
+	}
+	if (mos.area[0] > 0) {
+		result.params.push_back(parse_spice::parameter("ad", to_minstring((double)mos.area[0]*(tech.dbunit*tech.scale*tech.dbunit*tech.scale*1e-6)) + "u"));
+	}
+	if (mos.area[1] > 0) {
+		result.params.push_back(parse_spice::parameter("as", to_minstring((double)mos.area[1]*(tech.dbunit*tech.scale*tech.dbunit*tech.scale*1e-6)) + "u"));
+	}
+	if (mos.perim[0] > 0) {
+		result.params.push_back(parse_spice::parameter("pd", to_minstring((double)mos.perim[0]*(tech.dbunit*tech.scale)) + "u"));
+	}
+	if (mos.perim[1] > 0) {
+		result.params.push_back(parse_spice::parameter("ps", to_minstring((double)mos.perim[1]*(tech.dbunit*tech.scale)) + "u"));
+	}
+
+	for (auto param = mos.params.begin(); param != mos.params.end(); param++) {
+		result.params.push_back(parse_spice::parameter(param->first, to_minstring(param->second[0])));
+	}
 
 	return result;
 }
