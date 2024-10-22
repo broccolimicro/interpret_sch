@@ -89,16 +89,41 @@ bool import_device(const parse_spice::device &syntax, Subckt &ckt, const Tech &t
 	int source = ckt.findNet(import_name(syntax.ports[2]), true);
 	int base = ckt.findNet(import_name(syntax.ports[3]), true);
 
+	vec2i size(0,0);
+	vec2i area(0,0), perim(0,0);
+
 	ckt.pushMos(modelIdx, type, drain, gate, source, base);
 	for (auto param = syntax.params.begin(); param != syntax.params.end(); param++) {
 		vector<double> values(1, import_value(param->value, tokens));
 		if (param->name == "w") {
-			ckt.mos.back().size[1] = int(values[0]/(tech.dbunit*1e-6*tech.scale));
+			size[1] = int(values[0]/(tech.dbunit*tech.scale*1e-6));
 		} else if (param->name == "l") {
-			ckt.mos.back().size[0] = int(values[0]/(tech.dbunit*1e-6*tech.scale));
+			size[0] = int(values[0]/(tech.dbunit*tech.scale*1e-6));
+		} else if (param->name == "as") {
+			area[1] = int(values[0]/(tech.dbunit*tech.dbunit*tech.scale*tech.scale*1e-6));
+		} else if (param->name == "ad") {
+			area[0] = int(values[0]/(tech.dbunit*tech.dbunit*tech.scale*tech.scale*1e-6));
+		} else if (param->name == "ps") {
+			perim[1] = int(values[0]/(tech.dbunit*tech.scale*1e-6));
+		} else if (param->name == "pd") {
+			perim[0] = int(values[0]/(tech.dbunit*tech.scale*1e-6));
 		} else {
 			ckt.mos.back().params.insert(pair<string, vector<double> >(param->name, values));
 		}
+	}
+
+	ckt.mos.back().setSize(tech, size);
+	if (area[0] > 0) {
+		ckt.mos.back().area[0] = area[0];
+	}
+	if (area[1] > 0) {
+		ckt.mos.back().area[1] = area[1];
+	}
+	if (perim[0] > 0) {
+		ckt.mos.back().perim[0] = perim[0];
+	}
+	if (perim[1] > 0) {
+		ckt.mos.back().perim[1] = perim[1];
 	}
 
 	return true;
