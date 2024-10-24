@@ -1,5 +1,6 @@
 #include "export.h"
 #include <common/text.h>
+#include <math.h>
 
 namespace sch {
 
@@ -34,6 +35,49 @@ string export_name(const Subckt &ckt, int net) {
 	return export_name(ckt.nets[net].name);
 }
 
+string export_value(double value) {
+	static const char *units = "afpnum kxg";
+	static const int len = 10;
+
+	if (value == 0.0) {
+		return "0.0";
+	}
+
+	string result = "";
+	if (value < 0.0) {
+		result.push_back('-');
+		value = -value;
+	}
+
+	int exp = (int)log10(value);
+	int idx = exp/3;
+	int off = exp%3;
+	if (off == 2) {
+		idx++;
+		off = -1;
+	}
+	if (off == -2) {
+		idx--;
+		off = 1;
+	}
+	idx += 6;
+	if (idx < 0) {
+		off += idx*3;
+		idx = 0;
+	} else if (idx >= len) {
+		off += (idx-len+1)*3;
+		idx = len-1;
+	}
+
+	value *= pow(10.0, (double)(off - exp));
+	result += to_minstring(value);
+	if (units[idx] != ' ') {
+		result.push_back(units[idx]);
+	}
+
+	return result;
+}
+
 parse_spice::device export_instance(const Netlist &lib, const Subckt &ckt, const Instance &inst, int index) {
 	parse_spice::device result;
 	result.valid = true;
@@ -60,23 +104,26 @@ parse_spice::device export_device(const Tech &tech, const Subckt &ckt, const Mos
 	result.ports.push_back(export_name(ckt, mos.base));
 	result.type = tech.models[mos.model].name;
 
+	double coeff = tech.dbunit*tech.scale*1e-6;
+	double coeff2 = tech.dbunit*tech.dbunit*tech.scale*1e-6;
+
 	if (mos.size[1] > 0) {
-		result.params.push_back(parse_spice::parameter("w", to_minstring((double)mos.size[1]*(tech.dbunit*tech.scale)) + "u"));
+		result.params.push_back(parse_spice::parameter("w", export_value((double)mos.size[1]*coeff)));
 	}
 	if (mos.size[0] > 0) {
-		result.params.push_back(parse_spice::parameter("l", to_minstring((double)mos.size[0]*(tech.dbunit*tech.scale)) + "u"));
+		result.params.push_back(parse_spice::parameter("l", export_value((double)mos.size[0]*coeff)));
 	}
 	if (mos.area[0] > 0) {
-		result.params.push_back(parse_spice::parameter("ad", to_minstring((double)mos.area[0]*(tech.dbunit*tech.scale*tech.dbunit*tech.scale*1e-6)) + "u"));
+		result.params.push_back(parse_spice::parameter("ad", export_value((double)mos.area[0]*coeff2)));
 	}
 	if (mos.area[1] > 0) {
-		result.params.push_back(parse_spice::parameter("as", to_minstring((double)mos.area[1]*(tech.dbunit*tech.scale*tech.dbunit*tech.scale*1e-6)) + "u"));
+		result.params.push_back(parse_spice::parameter("as", export_value((double)mos.area[1]*coeff2)));
 	}
 	if (mos.perim[0] > 0) {
-		result.params.push_back(parse_spice::parameter("pd", to_minstring((double)mos.perim[0]*(tech.dbunit*tech.scale)) + "u"));
+		result.params.push_back(parse_spice::parameter("pd", export_value((double)mos.perim[0]*coeff)));
 	}
 	if (mos.perim[1] > 0) {
-		result.params.push_back(parse_spice::parameter("ps", to_minstring((double)mos.perim[1]*(tech.dbunit*tech.scale)) + "u"));
+		result.params.push_back(parse_spice::parameter("ps", export_value((double)mos.perim[1]*coeff)));
 	}
 
 	for (auto param = mos.params.begin(); param != mos.params.end(); param++) {

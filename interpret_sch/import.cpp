@@ -92,21 +92,24 @@ bool import_device(const parse_spice::device &syntax, Subckt &ckt, const Tech &t
 	vec2i size(0,0);
 	vec2i area(0,0), perim(0,0);
 
+	double coeff = tech.dbunit*tech.scale*1e-6;
+	double coeff2 = tech.dbunit*tech.dbunit*tech.scale*1e-6;
+
 	ckt.pushMos(modelIdx, type, drain, gate, source, base);
 	for (auto param = syntax.params.begin(); param != syntax.params.end(); param++) {
 		vector<double> values(1, import_value(param->value, tokens));
 		if (param->name == "w") {
-			size[1] = int(values[0]/(tech.dbunit*tech.scale*1e-6));
+			size[1] = int(values[0]/coeff);
 		} else if (param->name == "l") {
-			size[0] = int(values[0]/(tech.dbunit*tech.scale*1e-6));
+			size[0] = int(values[0]/coeff);
 		} else if (param->name == "as") {
-			area[1] = int(values[0]/(tech.dbunit*tech.dbunit*tech.scale*tech.scale*1e-6));
+			area[1] = int(values[0]/coeff2);
 		} else if (param->name == "ad") {
-			area[0] = int(values[0]/(tech.dbunit*tech.dbunit*tech.scale*tech.scale*1e-6));
+			area[0] = int(values[0]/coeff2);
 		} else if (param->name == "ps") {
-			perim[1] = int(values[0]/(tech.dbunit*tech.scale*1e-6));
+			perim[1] = int(values[0]/coeff);
 		} else if (param->name == "pd") {
-			perim[0] = int(values[0]/(tech.dbunit*tech.scale*1e-6));
+			perim[0] = int(values[0]/coeff);
 		} else {
 			ckt.mos.back().params.insert(pair<string, vector<double> >(param->name, values));
 		}
