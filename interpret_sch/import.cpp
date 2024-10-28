@@ -65,7 +65,12 @@ bool import_device(const parse_spice::device &syntax, Subckt &ckt, const Tech &t
 
 	// DESIGN(edward.bingham) Since we're focused on digital design, we'll only support transistor layout for now.
 	if (string("mx").find(devType) == string::npos) {
-		printf("not transistor or subckt %s%s\n", devType.c_str(), devName.c_str());
+		return false;
+	}
+
+	int modelIdx = tech.findModel(syntax.type);
+	// if the modelName isn't in the model list, then this is a non-transistor subckt
+	if (modelIdx < 0) {
 		return false;
 	}
 
@@ -73,13 +78,6 @@ bool import_device(const parse_spice::device &syntax, Subckt &ckt, const Tech &t
 	// drain gate source base
 	if (syntax.ports.size() != 4) {
 		printf("transistors only have 4 ports\n");
-		return false;
-	}
-
-	int modelIdx = tech.findModel(syntax.type);
-	// if the modelName isn't in the model list, then this is a non-transistor subckt
-	if (modelIdx < 0) {
-		printf("model not found %s\n", syntax.type.c_str());
 		return false;
 	}
 
@@ -141,10 +139,10 @@ Subckt import_subckt(const parse_spice::subckt &syntax, const Tech &tech, tokeni
 
 	for (int i = 0; i < (int)syntax.devices.size(); i++) {
 		if (not import_device(syntax.devices[i], ckt, tech, tokens)) {
-			printf("unrecognized device\n");
+			printf("unrecognized device/subckt\n");
+			printf("%s\n", syntax.devices[i].to_string().c_str());
 		}
 	}
-	ckt.print();
 	return ckt;
 }
 
