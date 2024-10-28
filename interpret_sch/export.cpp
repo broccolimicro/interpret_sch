@@ -32,7 +32,11 @@ string export_name(string name) {
 }
 
 string export_name(const Subckt &ckt, int net) {
-	return export_name(ckt.nets[net].name);
+	if (net >= 0) {
+		return export_name(ckt.nets[net].name);
+	} else {
+		return "__";
+	}
 }
 
 string export_value(double value) {
