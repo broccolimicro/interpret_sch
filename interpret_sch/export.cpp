@@ -112,22 +112,22 @@ parse_spice::device export_device(const Tech &tech, const Subckt &ckt, const Mos
 	double coeff2 = tech.dbunit*tech.dbunit*tech.scale*1e-6;
 
 	if (mos.size[1] > 0) {
-		result.params.push_back(parse_spice::parameter("w", export_value((double)mos.size[1]*coeff)));
+		result.params.push_back(parse_spice::parameter("w", export_value(coeff*(double)mos.size[1])));
 	}
 	if (mos.size[0] > 0) {
-		result.params.push_back(parse_spice::parameter("l", export_value((double)mos.size[0]*coeff)));
+		result.params.push_back(parse_spice::parameter("l", export_value(coeff*(double)mos.size[0])));
 	}
 	if (mos.area[0] > 0) {
-		result.params.push_back(parse_spice::parameter("ad", export_value((double)mos.area[0]*coeff2)));
+		result.params.push_back(parse_spice::parameter("ad", export_value(coeff2*(double)mos.area[0])));
 	}
 	if (mos.area[1] > 0) {
-		result.params.push_back(parse_spice::parameter("as", export_value((double)mos.area[1]*coeff2)));
+		result.params.push_back(parse_spice::parameter("as", export_value(coeff2*(double)mos.area[1])));
 	}
 	if (mos.perim[0] > 0) {
-		result.params.push_back(parse_spice::parameter("pd", export_value((double)mos.perim[0]*coeff)));
+		result.params.push_back(parse_spice::parameter("pd", export_value(coeff*(double)mos.perim[0])));
 	}
 	if (mos.perim[1] > 0) {
-		result.params.push_back(parse_spice::parameter("ps", export_value((double)mos.perim[1]*coeff)));
+		result.params.push_back(parse_spice::parameter("ps", export_value(coeff*(double)mos.perim[1])));
 	}
 
 	for (auto param = mos.params.begin(); param != mos.params.end(); param++) {

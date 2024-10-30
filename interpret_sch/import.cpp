@@ -93,21 +93,21 @@ bool import_device(const parse_spice::device &syntax, Subckt &ckt, const Tech &t
 	double coeff = tech.dbunit*tech.scale*1e-6;
 	double coeff2 = tech.dbunit*tech.dbunit*tech.scale*1e-6;
 
-	ckt.pushMos(modelIdx, type, drain, gate, source, base);
+	ckt.push(Mos(modelIdx, type, drain, gate, source, base));
 	for (auto param = syntax.params.begin(); param != syntax.params.end(); param++) {
 		vector<double> values(1, import_value(param->value, tokens));
 		if (param->name == "w") {
-			size[1] = int(values[0]/coeff);
+			size[1] = int(values[0]/coeff + 0.5);
 		} else if (param->name == "l") {
-			size[0] = int(values[0]/coeff);
+			size[0] = int(values[0]/coeff + 0.5);
 		} else if (param->name == "as") {
-			area[1] = int(values[0]/coeff2);
+			area[1] = int(values[0]/coeff2 + 0.5);
 		} else if (param->name == "ad") {
-			area[0] = int(values[0]/coeff2);
+			area[0] = int(values[0]/coeff2 + 0.5);
 		} else if (param->name == "ps") {
-			perim[1] = int(values[0]/coeff);
+			perim[1] = int(values[0]/coeff + 0.5);
 		} else if (param->name == "pd") {
-			perim[0] = int(values[0]/coeff);
+			perim[0] = int(values[0]/coeff + 0.5);
 		} else {
 			ckt.mos.back().params.insert(pair<string, vector<double> >(param->name, values));
 		}
@@ -134,7 +134,7 @@ Subckt import_subckt(const parse_spice::subckt &syntax, const Tech &tech, tokeni
 	Subckt ckt;
 	ckt.name = syntax.name;
 	for (int i = 0; i < (int)syntax.ports.size(); i++) {
-		ckt.pushNet(import_name(syntax.ports[i]), true);
+		ckt.push(Net(import_name(syntax.ports[i]), true));
 	}
 
 	for (int i = 0; i < (int)syntax.devices.size(); i++) {
