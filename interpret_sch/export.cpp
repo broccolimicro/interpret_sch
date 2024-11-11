@@ -179,4 +179,10 @@ parse_spice::netlist export_netlist(const Netlist &lib) {
 	return result;
 }
 
+void export_spi(string filename, const Netlist &net, const Subckt &ckt) {
+	FILE *fout = fopen(filename.c_str(), "w");
+	fprintf(fout, "%s", export_subckt(net, ckt).to_string().c_str());
+	fclose(fout);
+}
+
 }
