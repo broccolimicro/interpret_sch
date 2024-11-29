@@ -2,7 +2,6 @@
 
 #include <parse_spice/netlist.h>
 #include <sch/Netlist.h>
-#include <ucs/variable.h>
 
 namespace sch {
 
