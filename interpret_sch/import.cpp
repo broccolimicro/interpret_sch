@@ -65,6 +65,9 @@ bool import_device(const parse_spice::device &syntax, Subckt &ckt, const Tech &t
 
 	// DESIGN(edward.bingham) Since we're focused on digital design, we'll only support transistor layout for now.
 	if (string("mx").find(devType) == string::npos) {
+		if (string("clr").find(devType) != string::npos) {
+			return true;
+		}
 		return false;
 	}
 
@@ -82,10 +85,10 @@ bool import_device(const parse_spice::device &syntax, Subckt &ckt, const Tech &t
 	}
 
 	int type = tech.models[modelIdx].type;
-	int drain = ckt.findNet(import_name(syntax.ports[0]), true);
-	int gate = ckt.findNet(import_name(syntax.ports[1]), true);
-	int source = ckt.findNet(import_name(syntax.ports[2]), true);
-	int base = ckt.findNet(import_name(syntax.ports[3]), true);
+	int drain = ckt.createNet(import_name(syntax.ports[0]));
+	int gate = ckt.createNet(import_name(syntax.ports[1]));
+	int source = ckt.createNet(import_name(syntax.ports[2]));
+	int base = ckt.createNet(import_name(syntax.ports[3]));
 
 	vec2i size(0,0);
 	vec2i area(0,0), perim(0,0);
@@ -158,7 +161,7 @@ bool import_instance(const Netlist &lst, const parse_spice::device &syntax, Subc
 	Instance inst(modelIdx);
 	inst.name = instName;
 	for (int i = 0; i < (int)syntax.ports.size(); i++) {
-		int port = ckt.findNet(import_name(syntax.ports[i]), true);
+		int port = ckt.createNet(import_name(syntax.ports[i]));
 		inst.ports.push_back(port);
 	}
 
