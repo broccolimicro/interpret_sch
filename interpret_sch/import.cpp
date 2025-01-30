@@ -130,26 +130,73 @@ bool import_device(const parse_spice::device &syntax, Subckt &ckt, const Tech &t
 	return true;
 }
 
-Subckt import_subckt(const parse_spice::subckt &syntax, const Tech &tech, tokenizer *tokens) {
-	Subckt ckt;
+bool import_instance(const Netlist &lst, const parse_spice::device &syntax, Subckt &ckt, const Tech &tech, tokenizer *tokens) {
+	if (not syntax.valid) {
+		return false;
+	}
+
+	string instType = string(1, (char)tolower(syntax.name[0]));
+	string instName = syntax.name.substr(1);
+
+	// DESIGN(edward.bingham) Since we're focused on digital design, we'll only support transistor layout for now.
+	if (string("x").find(instType) == string::npos) {
+		return false;
+	}
+
+	int modelIdx = -1;
+	for (int i = 0; i < (int)lst.subckts.size(); i++) {
+		if (lst.subckts[i].name == syntax.type) {
+			modelIdx = i;
+			break;
+		}
+	}
+	// if the subckt isn't in the netlist, then we can't instantiate it.
+	if (modelIdx < 0) {
+		return false;
+	}
+
+	Instance inst(modelIdx);
+	inst.name = instName;
+	for (int i = 0; i < (int)syntax.ports.size(); i++) {
+		int port = ckt.findNet(import_name(syntax.ports[i]), true);
+		inst.ports.push_back(port);
+	}
+
+	ckt.push(inst);
+	return true;
+}
+
+void import_subckt(Subckt &ckt, const parse_spice::subckt &syntax, const Tech &tech, tokenizer *tokens, const Netlist *lst) {
 	ckt.name = syntax.name;
 	for (int i = 0; i < (int)syntax.ports.size(); i++) {
 		ckt.push(Net(import_name(syntax.ports[i]), true));
 	}
 
 	for (int i = 0; i < (int)syntax.devices.size(); i++) {
-		if (not import_device(syntax.devices[i], ckt, tech, tokens)) {
-			printf("unrecognized device/subckt\n");
-			printf("%s\n", syntax.devices[i].to_string().c_str());
+		if (import_device(syntax.devices[i], ckt, tech, tokens)) {
+			continue;
 		}
+
+		if (lst != nullptr and import_instance(*lst, syntax.devices[i], ckt, tech, tokens)) {
+			continue;
+		}
+
+		printf("unrecognized device/subckt\n");
+		printf("%s\n", syntax.devices[i].to_string().c_str());
 	}
-	return ckt;
 }
 
 // load a spice AST into the layout engine
-void import_netlist(const parse_spice::netlist &syntax, Netlist &lib, tokenizer *tokens) {
+void import_netlist(const parse_spice::netlist &syntax, Netlist &lst, tokenizer *tokens) {
+	int start = (int)lst.subckts.size();
+	lst.subckts.resize(lst.subckts.size()+syntax.subckts.size());
+	// preload subckt names so that we can look them up out of order
 	for (int i = 0; i < (int)syntax.subckts.size(); i++) {
-		lib.subckts.push_back(import_subckt(syntax.subckts[i], *lib.tech, tokens));
+		lst.subckts[start+i].name = syntax.subckts[i].name;
+	}
+
+	for (int i = 0; i < (int)syntax.subckts.size(); i++) {
+		import_subckt(lst.subckts[start+i], syntax.subckts[i], *lst.tech, tokens, &lst);
 	}
 }
 
