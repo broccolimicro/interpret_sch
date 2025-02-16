@@ -82,7 +82,7 @@ string export_value(double value) {
 	return result;
 }
 
-parse_spice::device export_instance(const Netlist &lib, const Subckt &ckt, const Instance &inst, int index) {
+parse_spice::device export_instance(const Netlist &lst, const Subckt &ckt, const Instance &inst, int index) {
 	parse_spice::device result;
 	result.valid = true;
 
@@ -90,7 +90,7 @@ parse_spice::device export_instance(const Netlist &lib, const Subckt &ckt, const
 	for (int i = 0; i < (int)inst.ports.size(); i++) {
 		result.ports.push_back(export_name(ckt, inst.ports[i]));
 	}
-	result.type = lib.subckts[inst.subckt].name;
+	result.type = lst.subckts[inst.subckt].name;
 
 	return result;
 }
@@ -137,18 +137,18 @@ parse_spice::device export_device(const Tech &tech, const Subckt &ckt, const Mos
 	return result;
 }
 
-parse_spice::subckt export_subckt(const Netlist &lib, const Subckt &ckt) {
+parse_spice::subckt export_subckt(const Tech &tech, const Netlist &lst, const Subckt &ckt) {
 	parse_spice::subckt result;
 	result.valid = true;
 
 	result.name = ckt.name;
 
 	for (int i = 0; i < (int)ckt.inst.size(); i++) {
-		result.devices.push_back(export_instance(lib, ckt, ckt.inst[i], i));
+		result.devices.push_back(export_instance(lst, ckt, ckt.inst[i], i));
 	}
 
 	for (int i = 0; i < (int)ckt.mos.size(); i++) {
-		result.devices.push_back(export_device(*lib.tech, ckt, ckt.mos[i], i));
+		result.devices.push_back(export_device(tech, ckt, ckt.mos[i], i));
 	}
 
 	// TODO(edward.bingham) maybe we want
@@ -165,12 +165,12 @@ parse_spice::subckt export_subckt(const Netlist &lib, const Subckt &ckt) {
 	return result;
 }
 
-parse_spice::netlist export_netlist(const Netlist &lib) {
+parse_spice::netlist export_netlist(const Tech &tech, const Netlist &lst) {
 	parse_spice::netlist result;
 	result.valid = true;
 
-	for (int i = 0; i < (int)lib.subckts.size(); i++) {
-		result.subckts.push_back(export_subckt(lib, lib.subckts[i]));
+	for (int i = 0; i < (int)lst.subckts.size(); i++) {
+		result.subckts.push_back(export_subckt(tech, lst, lst.subckts[i]));
 		if (result.subckts.back().name.empty()) {
 			result.subckts.back().name = "process_" + to_string(i);
 		}
@@ -179,9 +179,9 @@ parse_spice::netlist export_netlist(const Netlist &lib) {
 	return result;
 }
 
-void export_spi(string filename, const Netlist &net, const Subckt &ckt) {
+void export_spi(string filename, const Tech &tech, const Netlist &net, const Subckt &ckt) {
 	FILE *fout = fopen(filename.c_str(), "w");
-	fprintf(fout, "%s", export_subckt(net, ckt).to_string().c_str());
+	fprintf(fout, "%s", export_subckt(tech, net, ckt).to_string().c_str());
 	fclose(fout);
 }
 
