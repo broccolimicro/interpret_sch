@@ -1,5 +1,6 @@
 NAME          = interpret_sch
-DEPEND        = sch phy ucs interpret_ucs parse_spice parse_ucs parse common
+DEPEND        = sch phy parse_spice parse boolean common
+TEST_DEPEND   = sch phy parse_spice parse boolean common
 
 SRCDIR        = $(NAME)
 TESTDIR       = tests
@@ -7,7 +8,7 @@ GTEST        := ../../googletest
 GTEST_I      := -I$(GTEST)/googletest/include -I.
 GTEST_L      := -L$(GTEST)/build/lib -L.
 
-CXXFLAGS      = -std=c++17 -O2 -g -Wall -fmessage-length=0 $(DEPEND:%=-I../%) -I.
+CXXFLAGS      = -std=c++17 -O2 -g -Wall -fmessage-length=0 $(DEPEND:%=-I../%) -I. $(shell python3-config --includes)
 LDFLAGS       =  
 
 SOURCES	     := $(shell mkdir -p $(SRCDIR); find $(SRCDIR) -name '*.cpp')

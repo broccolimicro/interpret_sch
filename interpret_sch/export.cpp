@@ -1,5 +1,4 @@
 #include "export.h"
-#include <common/text.h>
 #include <math.h>
 
 namespace sch {
