@@ -39,7 +39,7 @@ else
         CXXFLAGS += -D LINUX
     endif
     ifeq ($(UNAME_S),Darwin)
-        CXXFLAGS += -D OSX -mmacos-version-min=12.0 -Wno-varargs
+        CXXFLAGS += -D OSX -mmacos-version-min=15.0 -Wno-varargs
     endif
     UNAME_P := $(shell uname -p)
     ifeq ($(UNAME_P),x86_64)
