@@ -32,6 +32,9 @@ string export_name(string name) {
 
 string export_name(const Subckt &ckt, int net) {
 	if (net >= 0) {
+		if (ckt.nets[net].name.empty()) {
+			return "_" + ::to_string(net);
+		}
 		return export_name(ckt.nets[net].name);
 	} else {
 		return "__";
