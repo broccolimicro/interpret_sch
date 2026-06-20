@@ -17,6 +17,8 @@ string import_name(string name) {
 		{'5', ')'},
 		{'6', '<'},
 		{'7', '>'},
+		{'@', '8'},
+		{':', '9'},
 	};
 
 	string result;
@@ -133,8 +135,8 @@ bool import_device(const Tech &tech, Subckt &ckt, const parse_spice::device &syn
 	return true;
 }
 
-bool import_instance(const Tech &tech, Subckt &ckt, const parse_spice::device &syntax, tokenizer *tokens, const Netlist *lst) {
-	if (not syntax.valid or lst == nullptr) {
+bool import_instance(const Tech &tech, Subckt &ckt, const parse_spice::device &syntax, tokenizer *tokens) {
+	if (not syntax.valid) {
 		return false;
 	}
 
@@ -146,19 +148,7 @@ bool import_instance(const Tech &tech, Subckt &ckt, const parse_spice::device &s
 		return false;
 	}
 
-	int modelIdx = -1;
-	for (int i = 0; i < (int)lst->subckts.size(); i++) {
-		if (lst->subckts[i].name == syntax.type) {
-			modelIdx = i;
-			break;
-		}
-	}
-	// if the subckt isn't in the netlist, then we can't instantiate it.
-	if (modelIdx < 0) {
-		return false;
-	}
-
-	Instance inst(modelIdx);
+	Instance inst(syntax.type);
 	inst.name = instName;
 	for (int i = 0; i < (int)syntax.ports.size(); i++) {
 		int port = ckt.createNet(import_name(syntax.ports[i]));
@@ -169,7 +159,7 @@ bool import_instance(const Tech &tech, Subckt &ckt, const parse_spice::device &s
 	return true;
 }
 
-void import_subckt(const Tech &tech, Subckt &ckt, const parse_spice::subckt &syntax, tokenizer *tokens, const Netlist *lst) {
+void import_subckt(const Tech &tech, Subckt &ckt, const parse_spice::subckt &syntax, tokenizer *tokens) {
 	ckt.name = syntax.name;
 	for (int i = 0; i < (int)syntax.ports.size(); i++) {
 		ckt.push(Net(import_name(syntax.ports[i]), true));
@@ -180,7 +170,7 @@ void import_subckt(const Tech &tech, Subckt &ckt, const parse_spice::subckt &syn
 			continue;
 		}
 
-		if (lst != nullptr and import_instance(tech, ckt, syntax.devices[i], tokens, lst)) {
+		if (import_instance(tech, ckt, syntax.devices[i], tokens)) {
 			continue;
 		}
 
@@ -190,16 +180,11 @@ void import_subckt(const Tech &tech, Subckt &ckt, const parse_spice::subckt &syn
 }
 
 // load a spice AST into the layout engine
-void import_netlist(const Tech &tech, Netlist &lst, const parse_spice::netlist &syntax, tokenizer *tokens) {
-	int start = (int)lst.subckts.size();
-	lst.subckts.resize(lst.subckts.size()+syntax.subckts.size());
-	// preload subckt names so that we can look them up out of order
+void import_netlist(const Tech &tech, std::vector<Subckt> &lst, const parse_spice::netlist &syntax, tokenizer *tokens) {
+	int start = (int)lst.size();
+	lst.resize(start+syntax.subckts.size()); 
 	for (int i = 0; i < (int)syntax.subckts.size(); i++) {
-		lst.subckts[start+i].name = syntax.subckts[i].name;
-	}
-
-	for (int i = 0; i < (int)syntax.subckts.size(); i++) {
-		import_subckt(tech, lst.subckts[start+i], syntax.subckts[i], tokens, &lst);
+		import_subckt(tech, lst[start+i], syntax.subckts[i], tokens);
 	}
 }
 
