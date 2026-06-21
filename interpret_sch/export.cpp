@@ -13,10 +13,12 @@ string export_name(string name) {
 		{'\'', '3'},
 		{'(', '4'},
 		{')', '5'},
-		{'<', '6'},
-		{'>', '7'},
-		{'@', '8'},
-		{':', '9'},
+		{',', '6'},
+		{'<', '7'},
+		{'>', '8'},
+		{'@', '9'},
+		{':', 'A'},
+		{'-', 'A'},
 	};
 
 	string result;
@@ -94,7 +96,7 @@ parse_spice::device export_instance(const Subckt &ckt, const Instance &inst, int
 	for (int i = 0; i < (int)inst.ports.size(); i++) {
 		result.ports.push_back(export_name(ckt, inst.ports[i]));
 	}
-	result.type = inst.type;
+	result.type = export_name(inst.type);
 
 	return result;
 }
@@ -145,7 +147,7 @@ parse_spice::subckt export_subckt(const Tech &tech, const Subckt &ckt) {
 	parse_spice::subckt result;
 	result.valid = true;
 
-	result.name = ckt.name;
+	result.name = export_name(ckt.name);
 
 	for (int i = 0; i < (int)ckt.inst.size(); i++) {
 		result.devices.push_back(export_instance(ckt, ckt.inst[i], i));

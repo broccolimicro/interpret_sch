@@ -15,10 +15,12 @@ string import_name(string name) {
 		{'3', '\''},
 		{'4', '('},
 		{'5', ')'},
-		{'6', '<'},
-		{'7', '>'},
-		{'@', '8'},
-		{':', '9'},
+		{'6', ','},
+		{'7', '<'},
+		{'8', '>'},
+		{'9', '@'},
+		{'A', ':'},
+		{'A', '-'},
 	};
 
 	string result;
@@ -148,7 +150,7 @@ bool import_instance(const Tech &tech, Subckt &ckt, const parse_spice::device &s
 		return false;
 	}
 
-	Instance inst(syntax.type);
+	Instance inst(import_name(syntax.type));
 	inst.name = instName;
 	for (int i = 0; i < (int)syntax.ports.size(); i++) {
 		int port = ckt.createNet(import_name(syntax.ports[i]));
@@ -160,7 +162,7 @@ bool import_instance(const Tech &tech, Subckt &ckt, const parse_spice::device &s
 }
 
 void import_subckt(const Tech &tech, Subckt &ckt, const parse_spice::subckt &syntax, tokenizer *tokens) {
-	ckt.name = syntax.name;
+	ckt.name = import_name(syntax.name);
 	for (int i = 0; i < (int)syntax.ports.size(); i++) {
 		ckt.push(Net(import_name(syntax.ports[i]), true));
 	}
