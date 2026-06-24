@@ -176,7 +176,7 @@ parse_spice::subckt export_subckt(const Tech &tech, const Subckt &ckt) {
 
 	result.name = export_name(ckt.name);
 
-	result.caption = export_comment(ckt.comment);
+	result.header = export_comment(ckt.comment);
 
 	for (int i = 0; i < (int)ckt.inst.size(); i++) {
 		result.devices.push_back(export_instance(ckt, ckt.inst[i], i));

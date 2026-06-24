@@ -175,7 +175,7 @@ void import_subckt(const Tech &tech, Subckt &ckt, const parse_spice::subckt &syn
 		ckt.push(Net(import_name(syntax.ports[i]), true));
 	}
 
-	for (const std::string &s : syntax.caption) {
+	for (const std::string &s : syntax.header) {
 		ckt.comment += s + "\n";
 	}
 
