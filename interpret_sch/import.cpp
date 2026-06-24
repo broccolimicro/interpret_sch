@@ -134,6 +134,10 @@ bool import_device(const Tech &tech, Subckt &ckt, const parse_spice::device &syn
 		ckt.mos.back().perim[1] = perim[1];
 	}
 
+	for (const std::string &s : syntax.header) {
+		ckt.mos.back().comment += s + "\n";
+	}
+
 	return true;
 }
 
@@ -157,6 +161,10 @@ bool import_instance(const Tech &tech, Subckt &ckt, const parse_spice::device &s
 		inst.ports.push_back(port);
 	}
 
+	for (const std::string &s : syntax.header) {
+		inst.comment += s + "\n";
+	}
+
 	ckt.push(inst);
 	return true;
 }
@@ -165,6 +173,10 @@ void import_subckt(const Tech &tech, Subckt &ckt, const parse_spice::subckt &syn
 	ckt.name = import_name(syntax.name);
 	for (int i = 0; i < (int)syntax.ports.size(); i++) {
 		ckt.push(Net(import_name(syntax.ports[i]), true));
+	}
+
+	for (const std::string &s : syntax.caption) {
+		ckt.comment += s + "\n";
 	}
 
 	for (int i = 0; i < (int)syntax.devices.size(); i++) {

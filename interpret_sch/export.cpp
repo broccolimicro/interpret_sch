@@ -1,7 +1,30 @@
 #include "export.h"
 #include <math.h>
+#include <string>
+#include <vector>
 
 namespace sch {
+
+std::vector<std::string> export_comment(const std::string &comment) {
+	std::vector<std::string> lines;
+	size_t start = 0;
+	for (size_t i = 0; i < comment.size(); ++i) {
+		if (comment[i] == '\n') {
+			size_t end = i;
+			if (end > start and comment[end - 1] == '\r') {
+				--end;
+			}
+			lines.emplace_back(comment.substr(start, end - start));
+			start = i + 1;
+		}
+	}
+
+	if (start < comment.size()) {
+		lines.emplace_back(comment.substr(start));
+	}
+
+	return lines;
+}
 
 string export_name(string name) {
 	// Do name mangling
@@ -92,6 +115,8 @@ parse_spice::device export_instance(const Subckt &ckt, const Instance &inst, int
 	parse_spice::device result;
 	result.valid = true;
 
+	result.header = export_comment(inst.comment);
+
 	result.name = "x" + to_string(index);
 	for (int i = 0; i < (int)inst.ports.size(); i++) {
 		result.ports.push_back(export_name(ckt, inst.ports[i]));
@@ -104,6 +129,8 @@ parse_spice::device export_instance(const Subckt &ckt, const Instance &inst, int
 parse_spice::device export_device(const Tech &tech, const Subckt &ckt, const Mos &mos, int index) {
 	parse_spice::device result;
 	result.valid = true;
+
+	result.header = export_comment(mos.comment);
 
 	// TODO(edward.bingham) some technologies use raw transistor models "m" and some use subckts "x". For now, assume sky130 and use subckts
 	result.name = "x" + to_string(index);
@@ -148,6 +175,8 @@ parse_spice::subckt export_subckt(const Tech &tech, const Subckt &ckt) {
 	result.valid = true;
 
 	result.name = export_name(ckt.name);
+
+	result.caption = export_comment(ckt.comment);
 
 	for (int i = 0; i < (int)ckt.inst.size(); i++) {
 		result.devices.push_back(export_instance(ckt, ckt.inst[i], i));

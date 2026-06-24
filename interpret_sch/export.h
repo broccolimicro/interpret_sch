@@ -6,6 +6,7 @@
 
 namespace sch {
 
+std::vector<std::string> export_comment(const std::string &comment);
 string export_name(string name);
 string export_name(const Subckt &ckt, int net);
 string export_value(double value);
