@@ -19,8 +19,8 @@ string import_name(string name) {
 		{'7', '<'},
 		{'8', '>'},
 		{'9', '@'},
-		{'A', ':'},
-		{'A', '-'},
+		{'a', ':'},
+		{'b', '-'},
 	};
 
 	string result;
